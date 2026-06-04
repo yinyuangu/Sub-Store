@@ -153,6 +153,8 @@ proxy_false_rows = [row for row in verified_rows if not row["proxy_flag"]]
 
 for old_file in countries_dir.glob("socks5-*-uri.txt"):
     old_file.unlink()
+for old_file in countries_dir.glob("socks5-*-proxy-false-uri.txt"):
+    old_file.unlink()
 (subscriptions_dir / "socks5-all-uri.txt").unlink(missing_ok=True)
 (subscriptions_dir / "socks5-proxy-false-uri.txt").unlink(missing_ok=True)
 
@@ -180,6 +182,18 @@ def render_country_files(rows, suffix):
         file_rows.append((display_name, code, len(lines), raw_url))
     return all_lines, file_rows
 
+def render_aggregate(rows, name_suffix):
+    rows_by_country, _ = build_rows_by_country(rows)
+    all_lines = []
+    for code in sorted(rows_by_country):
+        proxies = sorted(set(rows_by_country[code]))
+        all_lines.extend(
+            f"socks5://{proxy}#{code}-{idx:03d}"
+            for idx, proxy in enumerate(proxies, start=1)
+        )
+    target = subscriptions_dir / f"socks5-{name_suffix}.txt"
+    target.write_text("\n".join(all_lines) + "\n", encoding="utf-8")
+
 index_lines = [
     "# 订阅索引",
     "",
@@ -201,25 +215,11 @@ index_lines = [
 ]
 
 alive_lines, alive_file_rows = render_country_files(verified_rows, "uri")
-proxy_false_lines, proxy_false_file_rows = render_country_files(proxy_false_rows, "proxy-false-uri")
+render_aggregate(proxy_false_rows, "proxy-false-uri")
 
 for display_name, code, count, raw_url in alive_file_rows:
     index_lines.append(f"| {display_name} | `{code}` | {count} | {raw_url} |")
 
-index_lines.extend(
-    [
-        "",
-        "## 仅 proxy:false 国家列表",
-        "",
-        "| 国家 | 代码 | 数量 | 链接 |",
-        "| --- | --- | ---: | --- |",
-    ]
-)
-
-for display_name, code, count, raw_url in proxy_false_file_rows:
-    index_lines.append(f"| {display_name} | `{code}` | {count} | {raw_url} |")
-
 (subscriptions_dir / "socks5-all-uri.txt").write_text("\n".join(alive_lines) + "\n", encoding="utf-8")
-(subscriptions_dir / "socks5-proxy-false-uri.txt").write_text("\n".join(proxy_false_lines) + "\n", encoding="utf-8")
 (subscriptions_dir / "README.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 PY

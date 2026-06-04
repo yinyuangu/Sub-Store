@@ -45,34 +45,3 @@
 | 乌克兰 | `UA` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-ua-uri.txt |
 | 美国 | `US` | 141 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-us-uri.txt |
 | 越南 | `VN` | 8 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-vn-uri.txt |
-
-## 仅 proxy:false 国家列表
-
-| 国家 | 代码 | 数量 | 链接 |
-| --- | --- | ---: | --- |
-| 奥地利 | `AT` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-at-proxy-false-uri.txt |
-| 孟加拉国 | `BD` | 7 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-bd-proxy-false-uri.txt |
-| 巴西 | `BR` | 2 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-br-proxy-false-uri.txt |
-| 中国 | `CN` | 9 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-cn-proxy-false-uri.txt |
-| 德国 | `DE` | 10 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-de-proxy-false-uri.txt |
-| 爱沙尼亚 | `EE` | 2 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-ee-proxy-false-uri.txt |
-| 芬兰 | `FI` | 3 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-fi-proxy-false-uri.txt |
-| 法国 | `FR` | 2 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-fr-proxy-false-uri.txt |
-| 英国 | `GB` | 2 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-gb-proxy-false-uri.txt |
-| 加纳 | `GH` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-gh-proxy-false-uri.txt |
-| 中国香港 | `HK` | 15 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-hk-proxy-false-uri.txt |
-| 印度尼西亚 | `ID` | 4 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-id-proxy-false-uri.txt |
-| 日本 | `JP` | 2 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-jp-proxy-false-uri.txt |
-| 柬埔寨 | `KH` | 4 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-kh-proxy-false-uri.txt |
-| 韩国 | `KR` | 5 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-kr-proxy-false-uri.txt |
-| 哈萨克斯坦 | `KZ` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-kz-proxy-false-uri.txt |
-| 荷兰 | `NL` | 5 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-nl-proxy-false-uri.txt |
-| 挪威 | `NO` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-no-proxy-false-uri.txt |
-| 巴基斯坦 | `PK` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-pk-proxy-false-uri.txt |
-| 波兰 | `PL` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-pl-proxy-false-uri.txt |
-| 俄罗斯 | `RU` | 21 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-ru-proxy-false-uri.txt |
-| 瑞典 | `SE` | 3 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-se-proxy-false-uri.txt |
-| 新加坡 | `SG` | 7 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-sg-proxy-false-uri.txt |
-| 乌克兰 | `UA` | 1 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-ua-proxy-false-uri.txt |
-| 美国 | `US` | 19 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-us-proxy-false-uri.txt |
-| 越南 | `VN` | 8 | https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-vn-proxy-false-uri.txt |
