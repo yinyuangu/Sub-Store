@@ -25,6 +25,53 @@ params = {
     "format": "json",
 }
 raw_prefix = "https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions"
+country_name_map = {
+    "AE": "阿联酋",
+    "AM": "亚美尼亚",
+    "AT": "奥地利",
+    "AU": "澳大利亚",
+    "BA": "波黑",
+    "BD": "孟加拉国",
+    "BG": "保加利亚",
+    "BR": "巴西",
+    "CA": "加拿大",
+    "CH": "瑞士",
+    "CN": "中国",
+    "DE": "德国",
+    "EE": "爱沙尼亚",
+    "ES": "西班牙",
+    "FI": "芬兰",
+    "FR": "法国",
+    "GB": "英国",
+    "GH": "加纳",
+    "HK": "中国香港",
+    "ID": "印度尼西亚",
+    "IL": "以色列",
+    "IN": "印度",
+    "JP": "日本",
+    "KG": "吉尔吉斯斯坦",
+    "KH": "柬埔寨",
+    "KR": "韩国",
+    "KZ": "哈萨克斯坦",
+    "MX": "墨西哥",
+    "MY": "马来西亚",
+    "NL": "荷兰",
+    "NO": "挪威",
+    "PH": "菲律宾",
+    "PK": "巴基斯坦",
+    "PL": "波兰",
+    "PS": "巴勒斯坦",
+    "RO": "罗马尼亚",
+    "RU": "俄罗斯",
+    "SE": "瑞典",
+    "SG": "新加坡",
+    "TH": "泰国",
+    "TR": "土耳其",
+    "UA": "乌克兰",
+    "US": "美国",
+    "VN": "越南",
+    "ZZ": "未知地区",
+}
 
 all_rows = []
 skip = 0
@@ -77,19 +124,19 @@ for old_file in countries_dir.glob("socks5-*-uri.txt"):
 
 all_lines = []
 index_lines = [
-    "# Generated subscriptions",
+    "# 订阅索引",
     "",
-    "Source: ProxyScrape free SOCKS5 list for all countries",
-    f"Total proxies: {len(all_rows)}",
-    f"Country files: {len(rows_by_country)}",
+    "来源：ProxyScrape 全部国家免费 SOCKS5 列表",
+    f"代理总数：{len(all_rows)}",
+    f"国家文件数：{len(rows_by_country)}",
     "",
-    "## Files",
+    "## 文件",
     "",
-    f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt): all countries combined",
+    f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt)：全部国家汇总订阅",
     "",
-    "## Countries",
+    "## 国家列表",
     "",
-    "| Country | Code | Count | URL |",
+    "| 国家 | 代码 | 数量 | 链接 |",
     "| --- | --- | ---: | --- |",
 ]
 
@@ -100,7 +147,8 @@ for code in sorted(rows_by_country):
     country_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
     all_lines.extend(lines)
     raw_url = f"{raw_prefix}/countries/{country_file.name}"
-    index_lines.append(f"| {country_names[code]} | `{code}` | {len(lines)} | {raw_url} |")
+    display_name = country_name_map.get(code, country_names[code])
+    index_lines.append(f"| {display_name} | `{code}` | {len(lines)} | {raw_url} |")
 
 (subscriptions_dir / "socks5-all-uri.txt").write_text("\n".join(all_lines) + "\n", encoding="utf-8")
 (subscriptions_dir / "README.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
