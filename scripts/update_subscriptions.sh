@@ -8,7 +8,6 @@ python3 - <<'PY'
 from bisect import bisect_right
 from typing import Optional
 from pathlib import Path
-import base64
 import ipaddress
 import json
 import re
@@ -84,10 +83,7 @@ def write_shadowrocket_nodes(target: Path, lines: list[str], prefix: str) -> int
         protocol, host, port = match.groups()
         name = f"{prefix}-{idx:03d}"
         protocol = protocol.lower()
-        if protocol in ("http", "https"):
-            payload = base64.b64encode(f"{host}:{port}".encode("utf-8")).decode("ascii").rstrip("=")
-            rendered.append(f"{protocol}://{payload}?method=auto#{name}")
-        elif protocol == "socks5":
+        if protocol == "socks5":
             rendered.append(f"socks5://{host}:{port}#{name}")
     content = "\n".join(rendered)
     if content:
@@ -152,7 +148,7 @@ for line in pedro_lines:
     if not match:
         continue
     protocol, ip_text, _ = match.groups()
-    if protocol.lower() == "socks4":
+    if protocol.lower() != "socks5":
         continue
     normalized_ip = normalize_ipv4(ip_text)
     if not normalized_ip:
@@ -206,7 +202,7 @@ summary_lines = [
     "本仓库每小时生成两个中国订阅：",
     "",
     f"- [proxyscrape_cn.txt]({raw_prefix}/proxyscrape_cn.txt)：ProxyScrape 的中国 SOCKS5，按源站 alive 汇总，共 {proxyscrape_count} 条",
-    f"- [pedro3pv_cn.txt]({raw_prefix}/pedro3pv_cn.txt)：pedro3pv/proxy-list 的中国 IP 过滤结果，经 proxy_checker.py 校验，已剔除 socks4，共 {pedro_count} 条",
+    f"- [pedro3pv_cn.txt]({raw_prefix}/pedro3pv_cn.txt)：pedro3pv/proxy-list 的中国 IP 过滤结果，经 proxy_checker.py 校验，只保留 socks5，共 {pedro_count} 条",
     "",
     f"ProxyScrape CN 原始 alive 候选数：{proxyscrape_count}",
     f"pedro3pv 中国 IP 候选数：{len(pedro_candidates)}",
