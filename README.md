@@ -1,11 +1,11 @@
 # SOCKS5 国家订阅仓库
 
-这个仓库会每小时从 ProxyScrape 自动更新一次全量 SOCKS5 代理，并按国家拆分成不同的订阅链接。
+这个仓库会每小时从 ProxyScrape 自动更新一次全量 SOCKS5 代理，先做一轮 SOCKS5 握手可用性测试，再按国家拆分成不同的订阅链接。
 
 主订阅链接：
 https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-all-uri.txt
 
-仅 `proxy:false` 订阅链接：
+仅 `proxy:false` 且通过测试的订阅链接：
 https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-proxy-false-uri.txt
 
 国家索引：

@@ -6,8 +6,10 @@ cd "$repo_root"
 
 python3 - <<'PY'
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import json
+import socket
 import urllib.parse
 import urllib.request
 
@@ -25,6 +27,8 @@ params = {
     "format": "json",
 }
 raw_prefix = "https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions"
+probe_timeout = 1.5
+probe_workers = 128
 country_name_map = {
     "AE": "阿联酋",
     "AM": "亚美尼亚",
@@ -126,8 +130,26 @@ unique_rows = {}
 for row in all_rows:
     unique_rows.setdefault(row["proxy"], row)
 
-alive_rows = list(unique_rows.values())
-proxy_false_rows = [row for row in alive_rows if not row["proxy_flag"]]
+def socks5_probe(proxy: str) -> bool:
+    host, port_text = proxy.rsplit(":", 1)
+    port = int(port_text)
+    try:
+        with socket.create_connection((host, port), timeout=probe_timeout) as sock:
+            sock.settimeout(probe_timeout)
+            sock.sendall(b"\x05\x01\x00")
+            response = sock.recv(2)
+            return response == b"\x05\x00"
+    except OSError:
+        return False
+
+tested_ok = set()
+with ThreadPoolExecutor(max_workers=probe_workers) as executor:
+    for proxy, ok in zip(unique_rows, executor.map(socks5_probe, unique_rows)):
+        if ok:
+            tested_ok.add(proxy)
+
+verified_rows = [row for proxy, row in unique_rows.items() if proxy in tested_ok]
+proxy_false_rows = [row for row in verified_rows if not row["proxy_flag"]]
 
 for old_file in countries_dir.glob("socks5-*-uri.txt"):
     old_file.unlink()
@@ -162,21 +184,23 @@ index_lines = [
     "# 订阅索引",
     "",
     "来源：ProxyScrape 全部国家免费 SOCKS5 列表",
-    f"去重后 alive 节点数：{len(alive_rows)}",
-    f"其中 proxy:false 节点数：{len(proxy_false_rows)}",
+    f"源站去重后 alive 节点数：{len(unique_rows)}",
+    f"握手通过节点数：{len(verified_rows)}",
+    f"其中 proxy:false 且握手通过节点数：{len(proxy_false_rows)}",
+    f"测试方式：SOCKS5 无认证握手校验，超时 {probe_timeout} 秒，并发 {probe_workers}",
     "",
     "## 文件",
     "",
-    f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt)：全部 alive 节点汇总订阅",
-    f"- [socks5-proxy-false-uri.txt]({raw_prefix}/socks5-proxy-false-uri.txt)：仅 proxy:false 节点汇总订阅",
+    f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt)：全部握手通过节点汇总订阅",
+    f"- [socks5-proxy-false-uri.txt]({raw_prefix}/socks5-proxy-false-uri.txt)：仅 proxy:false 且握手通过节点汇总订阅",
     "",
-    "## 全部 alive 国家列表",
+    "## 全部握手通过国家列表",
     "",
     "| 国家 | 代码 | 数量 | 链接 |",
     "| --- | --- | ---: | --- |",
 ]
 
-alive_lines, alive_file_rows = render_country_files(alive_rows, "uri")
+alive_lines, alive_file_rows = render_country_files(verified_rows, "uri")
 proxy_false_lines, proxy_false_file_rows = render_country_files(proxy_false_rows, "proxy-false-uri")
 
 for display_name, code, count, raw_url in alive_file_rows:
