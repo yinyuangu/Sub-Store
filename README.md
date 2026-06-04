@@ -14,3 +14,4 @@
 - 再用 `https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/china.txt` 做中国 IP 范围比对
 - 命中中国 IP 范围后，使用 `pedro3pv/proxy-list` 的 `proxy_checker.py` 导出 `proxies_verified.txt`
 - `pedro3pv_cn` 已剔除 `socks4`
+- `pedro3pv_cn` 导出为 Shadowrocket 本地节点格式，兼容 `http` / `https` / `socks5`

@@ -74,6 +74,22 @@ def write_named_subscription(target: Path, lines: list[str], prefix: str) -> int
     return len(rendered)
 
 
+def write_shadowrocket_nodes(target: Path, lines: list[str], prefix: str) -> int:
+    rendered = []
+    for idx, line in enumerate(lines, start=1):
+        match = proxy_line_re.match(line)
+        if not match:
+            continue
+        protocol, host, port = match.groups()
+        name = f"{prefix}-{idx:03d}"
+        rendered.append(f"{name}={protocol.lower()},{host},{port},,")
+    content = "\n".join(rendered)
+    if content:
+        content += "\n"
+    target.write_text(content, encoding="utf-8")
+    return len(rendered)
+
+
 proxyscrape_rows = fetch_json_pages(proxyscrape_url, proxyscrape_params)
 proxyscrape_alive = sorted(
     {
@@ -172,7 +188,7 @@ with tempfile.TemporaryDirectory(prefix="pedro3pv-cn-") as tmp_dir:
         if line.strip()
     ]
 
-pedro_count = write_named_subscription(
+pedro_count = write_shadowrocket_nodes(
     subscriptions_dir / "pedro3pv_cn.txt",
     verified_lines,
     "pedro3pv_cn",
