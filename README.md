@@ -9,9 +9,3 @@ https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-
 - 美国：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-us-uri.txt
 - 日本：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-jp-uri.txt
 - 英国：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-gb-uri.txt
-
-在 Shadowrocket 中导入：
-1. 点右上角 `+`
-2. 类型选择 `Subscribe`
-3. 粘贴上面的订阅链接
-4. 保存后按需刷新
