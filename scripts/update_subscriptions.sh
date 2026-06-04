@@ -8,6 +8,7 @@ python3 - <<'PY'
 from bisect import bisect_right
 from typing import Optional
 from pathlib import Path
+import base64
 import ipaddress
 import json
 import re
@@ -82,7 +83,12 @@ def write_shadowrocket_nodes(target: Path, lines: list[str], prefix: str) -> int
             continue
         protocol, host, port = match.groups()
         name = f"{prefix}-{idx:03d}"
-        rendered.append(f"{name}={protocol.lower()},{host},{port},,")
+        protocol = protocol.lower()
+        if protocol in ("http", "https"):
+            payload = base64.b64encode(f"{host}:{port}".encode("utf-8")).decode("ascii").rstrip("=")
+            rendered.append(f"{protocol}://{payload}?method=auto#{name}")
+        elif protocol == "socks5":
+            rendered.append(f"socks5://{host}:{port}#{name}")
     content = "\n".join(rendered)
     if content:
         content += "\n"
