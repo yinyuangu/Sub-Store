@@ -5,9 +5,6 @@ This repository auto-updates free US SOCKS5 proxy subscriptions every hour from 
 Primary subscription URL:
 https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-us-uri.txt
 
-Alternative Shadowrocket node text:
-https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/shadowrocket-socks5-us.txt
-
 How to import in Shadowrocket:
 1. Tap `+`
 2. Choose `Subscribe`
