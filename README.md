@@ -1,14 +1,16 @@
-# SOCKS5 国家订阅仓库
+# 中国代理订阅仓库
 
-这个仓库会每小时从 ProxyScrape 自动更新一次全量 SOCKS5 代理，先做一轮 SOCKS5 握手可用性测试，再按国家拆分成不同的订阅链接。
+这个仓库每小时生成两个中国订阅链接：
 
-主订阅链接：
-https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-all-uri.txt
+- `proxyscrape_cn`
+  https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/proxyscrape_cn.txt
+- `pedro3pv_cn`
+  https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/pedro3pv_cn.txt
 
-中国节点直出链接（仅 `alive`，不做可用性测试）：
-https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-cn-direct-uri.txt
+说明：
 
-国家订阅示例：
-- 美国：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-us-uri.txt
-- 日本：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-jp-uri.txt
-- 英国：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-gb-uri.txt
+- `proxyscrape_cn` 只引用 `https://api.proxyscrape.com/v4/free-proxy-list/get?request=displayproxies&protocol=socks5&country=cn&format=json`
+- `pedro3pv_cn` 先从 `pedro3pv/proxy-list` 最新发布获取 `proxies_all.txt`
+- 再用 `https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/china.txt` 做中国 IP 范围比对
+- 命中中国 IP 范围后，使用 `pedro3pv/proxy-list` 的 `proxy_checker.py` 导出 `proxies_verified.txt`
+- `pedro3pv_cn` 已剔除 `socks4`

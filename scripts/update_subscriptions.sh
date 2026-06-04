@@ -5,11 +5,15 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 python3 - <<'PY'
-from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor
+from bisect import bisect_right
+from typing import Optional
 from pathlib import Path
+import ipaddress
 import json
-import socket
+import re
+import shutil
+import subprocess
+import tempfile
 import urllib.parse
 import urllib.request
 
@@ -17,202 +21,177 @@ repo_root = Path.cwd()
 subscriptions_dir = repo_root / "subscriptions"
 countries_dir = subscriptions_dir / "countries"
 subscriptions_dir.mkdir(parents=True, exist_ok=True)
-countries_dir.mkdir(parents=True, exist_ok=True)
+if countries_dir.exists():
+    shutil.rmtree(countries_dir)
 
-base_url = "https://api.proxyscrape.com/v4/free-proxy-list/get"
-params = {
+for item in subscriptions_dir.iterdir():
+    if item.is_file():
+        item.unlink()
+
+proxyscrape_url = "https://api.proxyscrape.com/v4/free-proxy-list/get"
+proxyscrape_params = {
     "request": "displayproxies",
     "protocol": "socks5",
-    "country": "all",
+    "country": "cn",
     "format": "json",
 }
+pedro_release_url = "https://github.com/pedro3pv/proxy-list/releases/latest/download/proxies_all.txt"
+china_ip_url = "https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/china.txt"
 raw_prefix = "https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions"
-probe_timeout = 1.5
-probe_workers = 128
-country_name_map = {
-    "AE": "阿联酋",
-    "AM": "亚美尼亚",
-    "AT": "奥地利",
-    "AU": "澳大利亚",
-    "BA": "波黑",
-    "BD": "孟加拉国",
-    "BE": "比利时",
-    "BG": "保加利亚",
-    "BR": "巴西",
-    "CA": "加拿大",
-    "CH": "瑞士",
-    "CN": "中国",
-    "DE": "德国",
-    "EE": "爱沙尼亚",
-    "ES": "西班牙",
-    "FI": "芬兰",
-    "FR": "法国",
-    "GB": "英国",
-    "GH": "加纳",
-    "HK": "中国香港",
-    "ID": "印度尼西亚",
-    "IL": "以色列",
-    "IN": "印度",
-    "IR": "伊朗",
-    "IT": "意大利",
-    "JP": "日本",
-    "KE": "肯尼亚",
-    "KG": "吉尔吉斯斯坦",
-    "KH": "柬埔寨",
-    "KR": "韩国",
-    "KZ": "哈萨克斯坦",
-    "LK": "斯里兰卡",
-    "LV": "拉脱维亚",
-    "MX": "墨西哥",
-    "MY": "马来西亚",
-    "NL": "荷兰",
-    "NO": "挪威",
-    "PH": "菲律宾",
-    "PK": "巴基斯坦",
-    "PL": "波兰",
-    "PS": "巴勒斯坦",
-    "RO": "罗马尼亚",
-    "RU": "俄罗斯",
-    "SE": "瑞典",
-    "SG": "新加坡",
-    "TH": "泰国",
-    "TR": "土耳其",
-    "TZ": "坦桑尼亚",
-    "UA": "乌克兰",
-    "US": "美国",
-    "UZ": "乌兹别克斯坦",
-    "VN": "越南",
-    "ZZ": "未知地区",
-}
+proxy_line_re = re.compile(r"^([a-z0-9+]+)://(\d{1,3}(?:\.\d{1,3}){3}):(\d+)$", re.IGNORECASE)
 
-all_rows = []
-skip = 0
-limit = None
 
-while True:
-    query = params | {"skip": skip}
-    url = f"{base_url}?{urllib.parse.urlencode(query)}"
-    with urllib.request.urlopen(url, timeout=60) as response:
-        payload = json.load(response)
+def fetch_json_pages(base_url: str, params: dict) -> list[dict]:
+    rows = []
+    skip = 0
+    limit = None
+    while True:
+        query = params | {"skip": skip}
+        url = f"{base_url}?{urllib.parse.urlencode(query)}"
+        with urllib.request.urlopen(url, timeout=90) as response:
+            payload = json.load(response)
 
-    if limit is None:
-        limit = int(payload.get("limit", 2000))
+        if limit is None:
+            limit = int(payload.get("limit", 2000))
 
-    proxies = payload.get("proxies", [])
-    if not proxies:
-        break
+        proxies = payload.get("proxies", [])
+        if not proxies:
+            break
+        rows.extend(proxies)
 
-    for proxy in proxies:
-        if not proxy.get("alive"):
-            continue
-        ip = proxy.get("ip")
-        port = proxy.get("port")
-        ip_data = proxy.get("ip_data") or {}
-        country_code = (ip_data.get("countryCode") or "ZZ").upper()
-        country_name = ip_data.get("country") or "Unknown"
-        proxy_flag = bool(ip_data.get("proxy", False))
-        if not ip or not port:
-            continue
-        all_rows.append(
-            {
-                "country_code": country_code,
-                "country_name": country_name,
-                "proxy": f"{ip}:{port}",
-                "proxy_flag": proxy_flag,
-            }
-        )
+        if not payload.get("nextpage"):
+            break
+        skip += limit
+    return rows
 
-    if not payload.get("nextpage"):
-        break
-    skip += limit
 
-unique_rows = {}
-for row in all_rows:
-    unique_rows.setdefault(row["proxy"], row)
+def write_named_subscription(target: Path, lines: list[str], prefix: str) -> int:
+    rendered = [f"{line}#{prefix}-{idx:03d}" for idx, line in enumerate(lines, start=1)]
+    content = "\n".join(rendered)
+    if content:
+        content += "\n"
+    target.write_text(content, encoding="utf-8")
+    return len(rendered)
 
-def socks5_probe(proxy: str) -> bool:
-    host, port_text = proxy.rsplit(":", 1)
-    port = int(port_text)
+
+proxyscrape_rows = fetch_json_pages(proxyscrape_url, proxyscrape_params)
+proxyscrape_alive = sorted(
+    {
+        f"socks5://{row['ip']}:{row['port']}"
+        for row in proxyscrape_rows
+        if row.get("alive") and row.get("ip") and row.get("port")
+    }
+)
+proxyscrape_count = write_named_subscription(
+    subscriptions_dir / "proxyscrape_cn.txt",
+    proxyscrape_alive,
+    "proxyscrape_cn",
+)
+
+with urllib.request.urlopen(china_ip_url, timeout=90) as response:
+    china_cidrs = [line.strip() for line in response.read().decode("utf-8").splitlines() if line.strip()]
+
+china_ranges = []
+for cidr in china_cidrs:
+    network = ipaddress.ip_network(cidr)
+    china_ranges.append((int(network.network_address), int(network.broadcast_address)))
+china_ranges.sort()
+china_starts = [start for start, _ in china_ranges]
+
+
+def ip_in_china_ranges(ip_text: str) -> bool:
+    ip_value = int(ipaddress.ip_address(ip_text))
+    idx = bisect_right(china_starts, ip_value) - 1
+    return idx >= 0 and ip_value <= china_ranges[idx][1]
+
+
+def normalize_ipv4(ip_text: str) -> Optional[str]:
+    parts = ip_text.split(".")
+    if len(parts) != 4:
+        return None
     try:
-        with socket.create_connection((host, port), timeout=probe_timeout) as sock:
-            sock.settimeout(probe_timeout)
-            sock.sendall(b"\x05\x01\x00")
-            response = sock.recv(2)
-            return response == b"\x05\x00"
-    except OSError:
-        return False
+        nums = [int(part, 10) for part in parts]
+    except ValueError:
+        return None
+    if any(num < 0 or num > 255 for num in nums):
+        return None
+    return ".".join(str(num) for num in nums)
 
-tested_ok = set()
-with ThreadPoolExecutor(max_workers=probe_workers) as executor:
-    for proxy, ok in zip(unique_rows, executor.map(socks5_probe, unique_rows)):
-        if ok:
-            tested_ok.add(proxy)
 
-verified_rows = [row for proxy, row in unique_rows.items() if proxy in tested_ok]
-cn_alive_rows = [row for row in unique_rows.values() if row["country_code"] == "CN"]
+with urllib.request.urlopen(pedro_release_url, timeout=180) as response:
+    pedro_lines = response.read().decode("utf-8", errors="replace").splitlines()
 
-for old_file in countries_dir.glob("socks5-*-uri.txt"):
-    old_file.unlink()
-for old_file in countries_dir.glob("socks5-*-proxy-false-uri.txt"):
-    old_file.unlink()
-(subscriptions_dir / "socks5-all-uri.txt").unlink(missing_ok=True)
-(subscriptions_dir / "socks5-proxy-false-uri.txt").unlink(missing_ok=True)
-(subscriptions_dir / "socks5-cn-direct-uri.txt").unlink(missing_ok=True)
+pedro_candidates = []
+for line in pedro_lines:
+    entry = line.strip()
+    if not entry:
+        continue
+    match = proxy_line_re.match(entry)
+    if not match:
+        continue
+    protocol, ip_text, _ = match.groups()
+    if protocol.lower() == "socks4":
+        continue
+    normalized_ip = normalize_ipv4(ip_text)
+    if not normalized_ip:
+        continue
+    if ip_in_china_ranges(normalized_ip):
+        pedro_candidates.append(f"{protocol.lower()}://{normalized_ip}:{match.group(3)}")
 
-def build_rows_by_country(rows):
-    rows_by_country = defaultdict(list)
-    country_names = {}
-    for row in rows:
-        code = row["country_code"]
-        rows_by_country[code].append(row["proxy"])
-        country_names[code] = row["country_name"]
-    return rows_by_country, country_names
+pedro_candidates = sorted(set(pedro_candidates))
 
-def render_country_files(rows, suffix):
-    rows_by_country, country_names = build_rows_by_country(rows)
-    all_lines = []
-    file_rows = []
-    for code in sorted(rows_by_country):
-        proxies = sorted(set(rows_by_country[code]))
-        lines = [f"socks5://{proxy}#{code}-{idx:03d}" for idx, proxy in enumerate(proxies, start=1)]
-        country_file = countries_dir / f"socks5-{code.lower()}-{suffix}.txt"
-        country_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        all_lines.extend(lines)
-        raw_url = f"{raw_prefix}/countries/{country_file.name}"
-        display_name = country_name_map.get(code, country_names[code])
-        file_rows.append((display_name, code, len(lines), raw_url))
-    return all_lines, file_rows
+with tempfile.TemporaryDirectory(prefix="pedro3pv-cn-") as tmp_dir:
+    tmp_path = Path(tmp_dir)
+    candidates_file = tmp_path / "proxies_cn_candidates.txt"
+    verified_file = tmp_path / "proxies_verified.txt"
+    checker_repo = tmp_path / "proxy-list"
 
-index_lines = [
+    candidates_file.write_text("\n".join(pedro_candidates) + ("\n" if pedro_candidates else ""), encoding="utf-8")
+
+    subprocess.run(
+        ["git", "clone", "--depth=1", "https://github.com/pedro3pv/proxy-list.git", str(checker_repo)],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+
+    subprocess.run(
+        [
+            "python3",
+            str(checker_repo / "proxy_checker.py"),
+            "--input",
+            str(candidates_file),
+            "--output",
+            str(verified_file),
+        ],
+        check=True,
+    )
+
+    verified_lines = [
+        line.strip()
+        for line in verified_file.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+pedro_count = write_named_subscription(
+    subscriptions_dir / "pedro3pv_cn.txt",
+    verified_lines,
+    "pedro3pv_cn",
+)
+
+summary_lines = [
     "# 订阅索引",
     "",
-    "来源：ProxyScrape 全部国家免费 SOCKS5 列表",
-    f"源站去重后 alive 节点数：{len(unique_rows)}",
-    f"握手通过节点数：{len(verified_rows)}",
-    f"中国直连候选数（仅 alive，不测试）：{len({row['proxy'] for row in cn_alive_rows})}",
-    f"测试方式：SOCKS5 无认证握手校验，超时 {probe_timeout} 秒，并发 {probe_workers}",
+    "本仓库每小时生成两个中国订阅：",
     "",
-    "## 文件",
+    f"- [proxyscrape_cn.txt]({raw_prefix}/proxyscrape_cn.txt)：ProxyScrape 的中国 SOCKS5，按源站 alive 汇总，共 {proxyscrape_count} 条",
+    f"- [pedro3pv_cn.txt]({raw_prefix}/pedro3pv_cn.txt)：pedro3pv/proxy-list 的中国 IP 过滤结果，经 proxy_checker.py 校验，已剔除 socks4，共 {pedro_count} 条",
     "",
-    f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt)：全部握手通过节点汇总订阅",
-    f"- [socks5-cn-direct-uri.txt]({raw_prefix}/socks5-cn-direct-uri.txt)：仅中国节点，跳过可用性测试",
+    f"ProxyScrape CN 原始 alive 候选数：{proxyscrape_count}",
+    f"pedro3pv 中国 IP 候选数：{len(pedro_candidates)}",
+    f"pedro3pv 中国校验通过数：{pedro_count}",
     "",
-    "## 全部握手通过国家列表",
-    "",
-    "| 国家 | 代码 | 数量 | 链接 |",
-    "| --- | --- | ---: | --- |",
+    f"China IP 范围来源：{china_ip_url}",
+    f"pedro3pv 最新发布来源：{pedro_release_url}",
 ]
-
-alive_lines, alive_file_rows = render_country_files(verified_rows, "uri")
-cn_direct_lines = [
-    f"socks5://{proxy}#CN-{idx:03d}"
-    for idx, proxy in enumerate(sorted({row["proxy"] for row in cn_alive_rows}), start=1)
-]
-
-for display_name, code, count, raw_url in alive_file_rows:
-    index_lines.append(f"| {display_name} | `{code}` | {count} | {raw_url} |")
-
-(subscriptions_dir / "socks5-all-uri.txt").write_text("\n".join(alive_lines) + "\n", encoding="utf-8")
-(subscriptions_dir / "socks5-cn-direct-uri.txt").write_text("\n".join(cn_direct_lines) + "\n", encoding="utf-8")
-(subscriptions_dir / "README.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
+(subscriptions_dir / "README.md").write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
 PY

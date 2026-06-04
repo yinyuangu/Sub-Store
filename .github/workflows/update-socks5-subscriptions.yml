@@ -1,4 +1,4 @@
-name: Update SOCKS5 Subscriptions
+name: Update CN Subscriptions
 
 on:
   push:
@@ -21,6 +21,16 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install checker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests aiohttp aiohttp-socks
 
       - name: Generate subscription files
         run: ./scripts/update_subscriptions.sh
