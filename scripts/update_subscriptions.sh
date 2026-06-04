@@ -149,6 +149,7 @@ with ThreadPoolExecutor(max_workers=probe_workers) as executor:
             tested_ok.add(proxy)
 
 verified_rows = [row for proxy, row in unique_rows.items() if proxy in tested_ok]
+cn_alive_rows = [row for row in unique_rows.values() if row["country_code"] == "CN"]
 
 for old_file in countries_dir.glob("socks5-*-uri.txt"):
     old_file.unlink()
@@ -156,6 +157,7 @@ for old_file in countries_dir.glob("socks5-*-proxy-false-uri.txt"):
     old_file.unlink()
 (subscriptions_dir / "socks5-all-uri.txt").unlink(missing_ok=True)
 (subscriptions_dir / "socks5-proxy-false-uri.txt").unlink(missing_ok=True)
+(subscriptions_dir / "socks5-cn-direct-uri.txt").unlink(missing_ok=True)
 
 def build_rows_by_country(rows):
     rows_by_country = defaultdict(list)
@@ -187,11 +189,13 @@ index_lines = [
     "来源：ProxyScrape 全部国家免费 SOCKS5 列表",
     f"源站去重后 alive 节点数：{len(unique_rows)}",
     f"握手通过节点数：{len(verified_rows)}",
+    f"中国直连候选数（仅 alive，不测试）：{len({row['proxy'] for row in cn_alive_rows})}",
     f"测试方式：SOCKS5 无认证握手校验，超时 {probe_timeout} 秒，并发 {probe_workers}",
     "",
     "## 文件",
     "",
     f"- [socks5-all-uri.txt]({raw_prefix}/socks5-all-uri.txt)：全部握手通过节点汇总订阅",
+    f"- [socks5-cn-direct-uri.txt]({raw_prefix}/socks5-cn-direct-uri.txt)：仅中国节点，跳过可用性测试",
     "",
     "## 全部握手通过国家列表",
     "",
@@ -200,10 +204,15 @@ index_lines = [
 ]
 
 alive_lines, alive_file_rows = render_country_files(verified_rows, "uri")
+cn_direct_lines = [
+    f"socks5://{proxy}#CN-{idx:03d}"
+    for idx, proxy in enumerate(sorted({row["proxy"] for row in cn_alive_rows}), start=1)
+]
 
 for display_name, code, count, raw_url in alive_file_rows:
     index_lines.append(f"| {display_name} | `{code}` | {count} | {raw_url} |")
 
 (subscriptions_dir / "socks5-all-uri.txt").write_text("\n".join(alive_lines) + "\n", encoding="utf-8")
+(subscriptions_dir / "socks5-cn-direct-uri.txt").write_text("\n".join(cn_direct_lines) + "\n", encoding="utf-8")
 (subscriptions_dir / "README.md").write_text("\n".join(index_lines) + "\n", encoding="utf-8")
 PY

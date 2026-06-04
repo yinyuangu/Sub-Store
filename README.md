@@ -5,6 +5,9 @@
 主订阅链接：
 https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-all-uri.txt
 
+中国节点直出链接（仅 `alive`，不做可用性测试）：
+https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/socks5-cn-direct-uri.txt
+
 国家订阅示例：
 - 美国：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-us-uri.txt
 - 日本：https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/countries/socks5-jp-uri.txt
