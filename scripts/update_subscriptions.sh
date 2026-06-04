@@ -6,8 +6,10 @@ cd "$repo_root"
 
 python3 - <<'PY'
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import json
+import socket
 import urllib.parse
 import urllib.request
 
@@ -25,6 +27,8 @@ params = {
     "format": "json",
 }
 raw_prefix = "https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions"
+probe_timeout = 1.5
+probe_workers = 128
 country_name_map = {
     "AE": "阿联酋",
     "AM": "亚美尼亚",
@@ -112,23 +116,51 @@ while True:
         break
     skip += limit
 
+unique_rows = {}
+for row in all_rows:
+    unique_rows.setdefault(row["proxy"], row)
+
+def socks5_probe(proxy: str) -> bool:
+    host, port_text = proxy.rsplit(":", 1)
+    port = int(port_text)
+    try:
+        with socket.create_connection((host, port), timeout=probe_timeout) as sock:
+            sock.settimeout(probe_timeout)
+            sock.sendall(b"\x05\x01\x00")
+            response = sock.recv(2)
+            return response == b"\x05\x00"
+    except OSError:
+        return False
+
+tested_ok = set()
+with ThreadPoolExecutor(max_workers=probe_workers) as executor:
+    for proxy, ok in zip(unique_rows, executor.map(socks5_probe, unique_rows)):
+        if ok:
+            tested_ok.add(proxy)
+
+verified_rows = [row for proxy, row in unique_rows.items() if proxy in tested_ok]
+
 rows_by_country = defaultdict(list)
 country_names = {}
-for row in all_rows:
+for row in verified_rows:
     code = row["country_code"]
     rows_by_country[code].append(row["proxy"])
     country_names[code] = row["country_name"]
 
 for old_file in countries_dir.glob("socks5-*-uri.txt"):
     old_file.unlink()
+(subscriptions_dir / "socks5-all-uri.txt").unlink(missing_ok=True)
+(subscriptions_dir / "socks5-us-uri.txt").unlink(missing_ok=True)
 
 all_lines = []
 index_lines = [
     "# 订阅索引",
     "",
     "来源：ProxyScrape 全部国家免费 SOCKS5 列表",
-    f"代理总数：{len(all_rows)}",
+    f"源数据代理数：{len(unique_rows)}",
+    f"握手通过数：{len(verified_rows)}",
     f"国家文件数：{len(rows_by_country)}",
+    f"测试方式：SOCKS5 无认证握手校验，超时 {probe_timeout} 秒，并发 {probe_workers}",
     "",
     "## 文件",
     "",
