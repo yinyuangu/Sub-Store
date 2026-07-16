@@ -6,7 +6,7 @@
 - [pedro3pv_cn.txt](https://raw.githubusercontent.com/yinyuangu/Sub-Store/main/subscriptions/pedro3pv_cn.txt)：pedro3pv/proxy-list 的中国 IP 过滤结果，经 proxy_checker.py 校验，只保留 socks5，共 2 条
 
 ProxyScrape CN 原始 alive 候选数：75
-pedro3pv 中国 IP 候选数：34312
+pedro3pv 中国 IP 候选数：34380
 pedro3pv 中国校验通过数：2
 
 China IP 范围来源：https://raw.githubusercontent.com/gaoyifan/china-operator-ip/ip-lists/china.txt
