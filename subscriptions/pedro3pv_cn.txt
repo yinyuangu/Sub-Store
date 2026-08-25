@@ -1,5 +1,11 @@
-socks5://112.28.149.154:8443#pedro3pv_cn-001
-socks5://139.196.95.28:7890#pedro3pv_cn-002
+socks5://139.196.95.28:7890#pedro3pv_cn-001
+socks5://112.28.149.152:8443#pedro3pv_cn-002
 socks5://116.196.111.171:64121#pedro3pv_cn-003
 socks5://103.210.161.8:1080#pedro3pv_cn-004
-socks5://124.223.195.172:1080#pedro3pv_cn-005
+socks5://112.74.165.243:1011#pedro3pv_cn-005
+socks5://27.36.70.76:1080#pedro3pv_cn-006
+socks5://124.223.195.172:1080#pedro3pv_cn-007
+socks5://117.50.194.130:7890#pedro3pv_cn-008
+socks5://49.234.123.95:1111#pedro3pv_cn-009
+socks5://113.87.88.97:9080#pedro3pv_cn-010
+socks5://223.75.121.218:12120#pedro3pv_cn-011
