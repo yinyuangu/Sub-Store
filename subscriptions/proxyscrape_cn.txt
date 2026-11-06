@@ -1,14 +1,3 @@
 socks5://113.249.111.67:1080#proxyscrape_cn-001
-socks5://115.236.37.105:2411#proxyscrape_cn-002
-socks5://120.133.82.62:44086#proxyscrape_cn-003
-socks5://120.133.82.62:44099#proxyscrape_cn-004
-socks5://120.133.82.62:44100#proxyscrape_cn-005
-socks5://120.133.82.62:44130#proxyscrape_cn-006
-socks5://120.133.82.62:44176#proxyscrape_cn-007
-socks5://120.133.82.62:44237#proxyscrape_cn-008
-socks5://218.77.50.79:6666#proxyscrape_cn-009
-socks5://36.213.79.159:1080#proxyscrape_cn-010
-socks5://47.121.182.88:8090#proxyscrape_cn-011
-socks5://47.92.152.43:4145#proxyscrape_cn-012
-socks5://58.144.196.192:39105#proxyscrape_cn-013
-socks5://58.32.16.138:7000#proxyscrape_cn-014
+socks5://27.219.186.8:1081#proxyscrape_cn-002
+socks5://36.213.79.159:1080#proxyscrape_cn-003
